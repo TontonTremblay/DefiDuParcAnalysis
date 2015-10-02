@@ -1,8 +1,11 @@
 
 
-import csv
+# import csv
+import unicodecsv as csv
+
 import urllib2
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
+import chardet
 
 opener = urllib2.build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -10,16 +13,47 @@ opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 url = 'https://www.ms1timing.com/live_results_v3.php?nocoursse=418&tabformat=RESULT418&where=cla_cat_niv1,105%20km'
 
 page = opener.open(url)
+page = page.read()
+encoding =  chardet.detect(page)['encoding']
 
-soup = BeautifulSoup(page.read())
+soup = BeautifulSoup(page,from_encoding=encoding)
 
-print soup.title
-print soup.find("a")
-# print soup.b
+t = soup.find("table",{"class":"resultats"})
 
-# print soup.find_all('a')
-# t = soup.find('table',{"class":"resultats"})
-# print t
+iso_csv = csv.writer(open('data.csv', 'w'))
+
+# get the header rows, write to the CSV
+# iso_csv.writerow( t.find("",{'class':'HeaderRow'}).findAll(text=True))
+
+
+# for row in t.find_all("tr")[0:1]:
+
+#     tds =  row.find_all("td")
+#     print [td.findAll(text=True) for td in tds]
+#     quit()
+# iso_csv.writerow([td.findAll(text=True)[0] for td in t.findAll('td')])
+
+
+
+
+
+for row in t.find_all("tr")[1:]:
+    tds = row.findAll('td')
+    raw_cols = [td.findAll(text=True) for td in tds]
+    # print raw_cols
+    cols = []
+
+    # break     
+    # cols.append(raw_cols[0][-1:][0])
+    for c in raw_cols:
+        if len(c)>0:
+            cols.append(str(c[0]))
+        else:
+            cols.append("")
+    # cols.append([str(col) for col in raw_cols])
+    # print cols
+    iso_csv.writerow(cols)
+    # break
 quit()
 
 
